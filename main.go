@@ -10,45 +10,6 @@ import (
 	"path"
 )
 
-/*
-{
-  "http": {
-    "services": {
-      "test-service": {
-        "loadBalancer": {
-          "servers": [
-            {
-              "url": "http://100.92.98.64:3000/"
-            }
-          ]
-        }
-      }
-    },
-    "routers": {
-      "test": {
-        "rule": "Host(`file-test.shorty.systems`)",
-        "tls": {
-          "certresolver": "default"
-        },
-        "service": "test-service"
-      }
-    }
-  }
-}
-*/
-
-/*
-	{
-	  "entryPoints": {
-	    "tcpep": {
-	      "address": ":3179"
-	    },
-	    "udpep": {
-	      "address": ":3179/udp"
-	    }
-	  }
-	}
-*/
 type TraefikServer struct {
 	URL string `json:"url"`
 }
@@ -74,12 +35,6 @@ type HttpService struct {
 	PublicDomain string `json:"publicDomain"`
 	Name         string `json:"name"`
 }
-
-// type SocketService struct {
-// 	Port    string
-// 	Address string
-// 	Name    string
-// }
 
 func loadFromDisk() ([]HttpService, []error) {
 	files, err := fs.Glob(os.DirFS("."), "config/*.json")
@@ -120,14 +75,6 @@ func main() {
 	httpServices, _ := loadFromDisk()
 	token := os.Getenv("TOKEN")
 
-	// socketServices := []SocketService{
-	// 	{
-	// 		Port:    "3001",
-	// 		Address: "100.92.98.64:3000",
-	// 		Name:    "test-socket",
-	// 	},
-	// }
-
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/traefik" {
 			// Write a json response
@@ -156,59 +103,9 @@ func main() {
 					out["http"].(map[string]interface{})["routers"].(map[string]interface{})["manager-"+service.Name] = r
 				}
 			}
-			// // This is not possible as of now. See: https://github.com/traefik/traefik/issues/6551
-			// if len(socketServices) > 0 {
-			// 	out["entryPoints"] = make(map[string]interface{})
-			// 	out["tcp"] = make(map[string]interface{})
-			// 	out["udp"] = make(map[string]interface{})
-			// 	for _, service := range socketServices {
-			// 		out["entryPoints"].(map[string]interface{})["manager-tcp-"+service.Name] = map[string]interface{}{
-			// 			"address": ":" + service.Port + "/tcp",
-			// 		}
-			// 		out["entryPoints"].(map[string]interface{})["manager-udp-"+service.Name] = map[string]interface{}{
-			// 			"address": ":" + service.Port + "/udp",
-			// 		}
-			// 		if out["tcp"].(map[string]interface{})["services"] == nil {
-			// 			out["tcp"].(map[string]interface{})["services"] = make(map[string]interface{})
-			// 		}
-			// 		if out["tcp"].(map[string]interface{})["routers"] == nil {
-			// 			out["tcp"].(map[string]interface{})["routers"] = make(map[string]interface{})
-			// 		}
-			// 		out["tcp"].(map[string]interface{})["services"].(map[string]interface{})["manager-tcp-"+service.Name] = map[string]interface{}{
-			// 			"loadBalancer": map[string]interface{}{
-			// 				"servers": []map[string]interface{}{
-			// 					{
-			// 						"address": service.Address,
-			// 					},
-			// 				},
-			// 			},
-			// 		}
-			// 		out["tcp"].(map[string]interface{})["routers"].(map[string]interface{})["manager-tcp-"+service.Name] = map[string]interface{}{
-			// 			"entryPoints": []string{"manager-tcp-" + service.Name},
-			// 			"service":    "manager-tcp-" + service.Name,
-			// 		}
+			// I want to also be able to setup tcp/udp proxy's.
+			// However, this is not possible as of now. See: https://github.com/traefik/traefik/issues/6551
 
-			// 		if out["udp"].(map[string]interface{})["services"] == nil {
-			// 			out["udp"].(map[string]interface{})["services"] = make(map[string]interface{})
-			// 		}
-			// 		if out["udp"].(map[string]interface{})["routers"] == nil {
-			// 			out["udp"].(map[string]interface{})["routers"] = make(map[string]interface{})
-			// 		}
-			// 		out["udp"].(map[string]interface{})["services"].(map[string]interface{})["manager-udp-"+service.Name] = map[string]interface{}{
-			// 			"loadBalancer": map[string]interface{}{
-			// 				"servers": []map[string]interface{}{
-			// 					{
-			// 						"address": service.Address,
-			// 					},
-			// 				},
-			// 			},
-			// 		}
-			// 		out["udp"].(map[string]interface{})["routers"].(map[string]interface{})["manager-udp-"+service.Name] = map[string]interface{}{
-			// 			"entryPoints": []string{"manager-udp-" + service.Name},
-			// 			"service":    "manager-udp-" + service.Name,
-			// 		}
-			// 	}
-			// }
 			json.NewEncoder(w).Encode(out)
 			return
 

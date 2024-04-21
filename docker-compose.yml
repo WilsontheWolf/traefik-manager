@@ -1,0 +1,14 @@
+version: "3.5"
+
+services:
+  traefik-manager:
+    image: ghcr.io/wilsonthewolf/traefik-manager:latest
+    container_name: traefik-manager
+    volumes:
+      - ./config:/config
+    restart: on-failure:5
+    stop_grace_period: 10s
+    ports:
+      - 3000:3000
+    environment:
+      - TOKEN=example
